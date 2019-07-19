@@ -1,5 +1,6 @@
 # OpenModbus
 OpenModbus是一个开源的Modbus协议栈，支持主/从机模式，并支持多个主从机在同一个设备运行。
+
 运行平台：
 1. 芯片：NXP KV4x
 2. 开发板：TWR-KV4x
@@ -15,6 +16,7 @@ OpenModbus是一个开源的Modbus协议栈，支持主/从机模式，并支持
 
 
 OpenModbus is an opensource modbus stack, it support multi-master and slave mode in one device.
+
 TestPlatform:
 1. Chip:NXP KV4x
 2. Board:TWR-KV4x
