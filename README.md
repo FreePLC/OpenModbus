@@ -9,7 +9,7 @@ TestPlatform:
 
 File description
 1. Modbus.c/.h stack core file, no need to modify.
-2. Modbus_Porting.c/.h porting file, user need to modify it if change the MCU platform.
+2. Modbus_Porting.c/.h porting file, user need to modify it if change the MCU platform, please fellow this [guide](https://github.com/FreePLC/OpenModbus/blob/master/PortingGuide.md).
 3. ModbusSlaveApp.c/.h Slave demo code, user need to modify it according to requirement.
 4. ModbusMasterApp.c/.h Master demo code, user need to modify it according to requirement.
 
@@ -23,7 +23,7 @@ OpenModbus是一个开源的Modbus协议栈，采用非阻塞函数调用，无�
 
 文件说明：
 1. Modbus.c/.h 协议栈核心，用户不需要修改
-2. Modbus_Porting.c/.h 移植文件，主要处理UART的接收/发送，更换MCU平台时需要用户修改
+2. Modbus_Porting.c/.h 移植文件，主要处理UART以及定时器的配置，如果更换MCU平台请根据[移植要点](https://github.com/FreePLC/OpenModbus/blob/master/PortingGuide.md)进行移植
 3. ModbusSlaveApp.c/.h 从站示例代码，用户可以根据需求修改
 4. ModbusMasterApp.c/.h 主站示例代码，用户可以根据需求修改
 
