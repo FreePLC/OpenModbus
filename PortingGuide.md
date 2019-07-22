@@ -6,7 +6,7 @@ There are five generic functions and one ISR function(one port Modbus)must be po
   void    (*UART_SendData)(uint8_t *pbyData, uint16_t uCount, uint8_t port);  //Uart Send by port. <br>
   void	(*UART_BaudrateSet)(uint32_t buadrate); //Uart init by buadrate. <br>
   
-  void MODBUS_xxx_Rx_ISR()  //Modbus UART Rx function.
+  void MODBUS_xxx_Rx_ISR()  //Modbus UART Rx function. <br>
   
   The default Modbus_Porting.c/.h used DMA to Tx, interrupt Rx and main process data to decrease the CPU loading. 
  #Note
@@ -21,8 +21,8 @@ There are five generic functions and one ISR function(one port Modbus)must be po
   void    (*UART_SendData)(uint8_t *pbyData, uint16_t uCount, uint8_t port);  //Uart Send by port. <br>
   void	(*UART_BaudrateSet)(uint32_t buadrate); //Uart init by buadrate. <br>
   
-  void MODBUS_xxx_Rx_ISR()  //Modbus UART Rx function.
-默认代码使用DMA进行发送，ISR进行接收，主循环进行数据处理以减小CPU的负荷。
+  void MODBUS_xxx_Rx_ISR()  //Modbus UART Rx function. <br>
+默认代码使用DMA进行发送，ISR进行接收，主循环进行数据处理以减小CPU的负荷。<br>
 #注意
   1. 示例代码使用UART_RTS作为RS485的收发使能，如果新平台不支持此功能，则需要软件根据UART的TC位来处理改引脚。
   2. 示例代码使用PIT作为3.5char的判断，该定时器是自动减定时器，如果需要更新为自动增，用户需要手动修改相关逻辑。
