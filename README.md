@@ -1,5 +1,19 @@
 # OpenModbus
-OpenModbus是一个开源的Modbus协议栈，支持主/从机模式，并支持多个主从机在同一个设备运行。
+OpenModbus is an opensource modbus stack, noblocking function call by main, without RTOS, it support multi-master and slave mode in one device.
+
+TestPlatform:
+1. Chip:NXP KV4x
+2. Board:TWR-KV4x
+3. IDE: IAR
+4. SDK: NXP SDK_2.4.1
+
+File description
+1. Modbus.c/.h stack core file, no need to modify.
+2. Modbus_Porting.c/.h porting file, user need to modify it if change the MCU platform.
+3. ModbusSlaveApp.c/.h Slave demo code, user need to modify it according to requirement.
+4. ModbusMasterApp.c/.h Master demo code, user need to modify it according to requirement.
+
+OpenModbus是一个开源的Modbus协议栈，采用非阻塞函数调用，无需使用RTOS，支持主/从机模式，并支持多个主从机在同一个设备运行。
 
 运行平台：
 1. 芯片：NXP KV4x
@@ -15,16 +29,4 @@ OpenModbus是一个开源的Modbus协议栈，支持主/从机模式，并支持
 
 
 
-OpenModbus is an opensource modbus stack, it support multi-master and slave mode in one device.
 
-TestPlatform:
-1. Chip:NXP KV4x
-2. Board:TWR-KV4x
-3. IDE: IAR
-4. SDK: NXP SDK_2.4.1
-
-File description
-1. Modbus.c/.h stack core file, no need to modify.
-2. Modbus_Porting.c/.h porting file, user need to modify it if change the MCU platform.
-3. ModbusSlaveApp.c/.h Slave demo code, user need to modify it according to requirement.
-4. ModbusMasterApp.c/.h Master demo code, user need to modify it according to requirement.
