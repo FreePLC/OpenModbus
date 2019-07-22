@@ -1,10 +1,10 @@
 There are five generic functions and one ISR function(one port Modbus)must be porting to other MCU platform:
 
-  void	(*Timer0_Init)(void);   //init the timer
-  uint32_t	(*Timer0_Value_Get)(void);  // get timer value
-  uint32_t	(*Timer0_Wait3_5char)(void);  //get modbus 3.5char value.
-  void    (*UART_SendData)(uint8_t *pbyData, uint16_t uCount, uint8_t port);  //Uart Send by port.
-  void	(*UART_BaudrateSet)(uint32_t buadrate); //Uart init by buadrate.
+  void	(*Timer0_Init)(void);   //init the timer <br>
+  uint32_t	(*Timer0_Value_Get)(void);  // get timer value <br>
+  uint32_t	(*Timer0_Wait3_5char)(void);  //get modbus 3.5char value. <br>
+  void    (*UART_SendData)(uint8_t *pbyData, uint16_t uCount, uint8_t port);  //Uart Send by port. <br>
+  void	(*UART_BaudrateSet)(uint32_t buadrate); //Uart init by buadrate. <br>
   
   void MODBUS_xxx_Rx_ISR()  //Modbus UART Rx function.
   
@@ -15,11 +15,11 @@ There are five generic functions and one ISR function(one port Modbus)must be po
   
 针对1个Modubs需要有五个通用函数和一个中断服务函数需要被移植：
 
-  void	(*Timer0_Init)(void);   //init the timer
-  uint32_t	(*Timer0_Value_Get)(void);  // get timer value
-  uint32_t	(*Timer0_Wait3_5char)(void);  //get modbus 3.5char value.
-  void    (*UART_SendData)(uint8_t *pbyData, uint16_t uCount, uint8_t port);  //Uart Send by port.
-  void	(*UART_BaudrateSet)(uint32_t buadrate); //Uart init by buadrate.
+  void	(*Timer0_Init)(void);   //init the timer <br>
+  uint32_t	(*Timer0_Value_Get)(void);  // get timer value <br>
+  uint32_t	(*Timer0_Wait3_5char)(void);  //get modbus 3.5char value. <br>
+  void    (*UART_SendData)(uint8_t *pbyData, uint16_t uCount, uint8_t port);  //Uart Send by port. <br>
+  void	(*UART_BaudrateSet)(uint32_t buadrate); //Uart init by buadrate. <br>
   
   void MODBUS_xxx_Rx_ISR()  //Modbus UART Rx function.
 默认代码使用DMA进行发送，ISR进行接收，主循环进行数据处理以减小CPU的负荷。
