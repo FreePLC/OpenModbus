@@ -36,7 +36,7 @@
 
 #define __MODBUS_PORTING_H__
 
-
+#include "ModbusUserConfig.h"
 #include "fsl_pit.h"
 #include "fsl_port.h"
 #include "fsl_uart.h"
@@ -51,18 +51,6 @@
 #define UART_TX_DMA        1
 #define UART_RX_DMA		   0
 
-  
-#define MODBUS_MASTER_USED
-#define MODBUS_SLAVE_USED
-
-#ifdef MODBUS_SLAVE_USED
-#define SLAVE_PORT0					0
-#endif
-
-#ifdef MODBUS_MASTER_USED
-#define MASTER_PORT0				0
-#endif
-
 
 #if UART_DMA_USED
 #include "fsl_edma.h"
@@ -71,22 +59,71 @@
 #endif
 
 
-//UART0 for Master
-#define UART1_Rx_IRQ        	UART0_RX_TX_IRQn
-#define MODBUS_MASTER_Rx1_ISR   UART0_RX_TX_IRQHandler
+#ifdef MODBUS_MASTER_USED
 
-#define MODBUS_UART1 			UART0
-#define MODBUS_UART1_CLKSRC 	kCLOCK_FastPeriphClk
+#define MODBUS_UART1_BAUDRATE  115200
+//UART0 for Master
+#define UART1_Rx_IRQ        	UART2_RX_TX_IRQn
+#define MODBUS_MASTER_Rx1_ISR   UART2_RX_TX_IRQHandler
+
+#define MODBUS_UART1 			UART2
+#define MODBUS_UART1_CLKSRC 	kCLOCK_BusClk
 #define MODBUS_UART1_CLK_FREQ 	CLOCK_GetFreq(MODBUS_UART1_CLKSRC)
 
+#define UART1_TX_PORT		PORTD
+#define UART1_TX_PIN        3
+#define UART1_TX_ALT		kPORT_MuxAlt3
 
+#define UART1_RX_PORT		PORTD
+#define UART1_RX_PIN        2
+#define UART1_RX_ALT		kPORT_MuxAlt3
+
+#define UART1_RTS_PORT		PORTD
+#define UART1_RTS_PIN       0
+#define UART1_RTS_ALT		kPORT_MuxAlt3
+
+#if UART_DMA_USED
+#define UART_DMAMUX_BASEADDR DMAMUX0
+#define UART_DMA_BASEADDR DMA0
+#define UART_TX1_DMA_REQUEST kDmaRequestMux0UART2Tx
+#define UART_RX1_DMA_REQUEST kDmaRequestMux0UART2Rx
+#endif
+
+
+#endif
+
+#ifdef MODBUS_SLAVE_USED
+
+#define MODBUS_UART2_BAUDRATE  115200
 //UART1 for Slave
-#define UART2_Rx_IRQ        	UART1_RX_TX_IRQn
-#define MODBUS_SLAVE_Rx_ISR     UART1_RX_TX_IRQHandler
+#define UART2_Rx_IRQ        	UART0_RX_TX_IRQn
+#define MODBUS_SLAVE_Rx_ISR     UART0_RX_TX_IRQHandler
 
-#define MODBUS_UART2 			UART1
-#define MODBUS_UART2_CLKSRC 	kCLOCK_FastPeriphClk
+#define MODBUS_UART2 			UART0
+#define MODBUS_UART2_CLKSRC 	kCLOCK_CoreSysClk
 #define MODBUS_UART2_CLK_FREQ 	CLOCK_GetFreq(MODBUS_UART2_CLKSRC)
+
+#define UART2_TX_PORT		PORTB
+#define UART2_TX_PIN        17
+#define UART2_TX_ALT		kPORT_MuxAlt3
+
+#define UART2_RX_PORT		PORTB
+#define UART2_RX_PIN        16
+#define UART2_RX_ALT		kPORT_MuxAlt3
+
+#define UART2_RTS_PORT		PORTB
+#define UART2_RTS_PIN       3
+#define UART2_RTS_ALT		kPORT_MuxAlt3
+
+#if UART_DMA_USED
+#define UART_DMAMUX_BASEADDR DMAMUX0
+#define UART_DMA_BASEADDR DMA0
+#define UART_TX2_DMA_REQUEST kDmaRequestMux0UART0Tx
+#define UART_RX2_DMA_REQUEST kDmaRequestMux0UART0Rx
+#endif
+
+
+#endif
 
 
 #if UART_TX_DMA
@@ -99,46 +136,9 @@
 #define UART2_RX_DMA_CHANNEL 7U
 #endif
 
-#if UART_DMA_USED
-#define UART_DMAMUX_BASEADDR DMAMUX0
-#define UART_DMA_BASEADDR DMA0
-#define UART_TX1_DMA_REQUEST kDmaRequestMux0UART0Tx
-#define UART_RX1_DMA_REQUEST kDmaRequestMux0UART0Rx
-
-#define UART_TX2_DMA_REQUEST kDmaRequestMux0UART1Tx
-#define UART_RX2_DMA_REQUEST kDmaRequestMux0UART1Rx
-
-#endif
-
-#define MODBUS_UART1_BAUDRATE  115200
-#define MODBUS_UART2_BAUDRATE  115200
-
-//UART PIN
-
-#define UART1_TX_PORT		PORTD
-#define UART1_TX_PIN        6
-#define UART1_TX_ALT		kPORT_MuxAlt3
-
-#define UART1_RX_PORT		PORTD
-#define UART1_RX_PIN        7
-#define UART1_RX_ALT		kPORT_MuxAlt3
-
-#define UART1_RTS_PORT		PORTD
-#define UART1_RTS_PIN       4
-#define UART1_RTS_ALT		kPORT_MuxAlt3
 
 
-#define UART2_TX_PORT		PORTE
-#define UART2_TX_PIN        0
-#define UART2_TX_ALT		kPORT_MuxAlt3
 
-#define UART2_RX_PORT		PORTE
-#define UART2_RX_PIN        1
-#define UART2_RX_ALT		kPORT_MuxAlt3
-
-#define UART2_RTS_PORT		PORTE
-#define UART2_RTS_PIN       3
-#define UART2_RTS_ALT		kPORT_MuxAlt3
 
 
 //MODBUS APP
@@ -156,8 +156,7 @@
 #define PLC_MEMORY_WORD_LEN    (PLC_MEMORY_LEN/2)
 
 
-#define MODBUS_SLAVE_NUMBER    			1
-#define MODBUS_MASTER_NUMBER    		1
+
 
 #define MODBUS_I_AREA					0
 #define MODBUS_Q_AREA					1
@@ -170,7 +169,11 @@
 #define MODBUS_Q_AREA_BASE 				(uint8_t *)PLC_OUTPUT_START_ADDR
 #define MODBUS_M_AREA_BASE 				(uint8_t *)PLC_MEMORY_START_ADDR
 
-//PIT
+//TIMER
+#ifndef TIMER_MINUS
+#define TIMER_MINUS 1
+#endif
+
 #define TIMER_SOURCE_CLOCK  CLOCK_GetFreq(kCLOCK_BusClk)
 
 #define NET1_TIMEOUT_LIMIT	MSEC_TO_COUNT(500,TIMER_SOURCE_CLOCK)
@@ -186,6 +189,8 @@
 void SendUART_Master(uint8_t *pbyData, uint16_t uCount, uint8_t port);
 void ModbusMasterInitPort(uint8_t port);
 uint8_t * GetMaster_MemoryAddr(uint8_t select, uint8_t port);
+uint32_t Modbus_Master0_Wait3_5char();
+
 #endif
 
 
@@ -193,12 +198,13 @@ uint8_t * GetMaster_MemoryAddr(uint8_t select, uint8_t port);
 void ModbusSlaveInitPort(uint8_t port);
 void SendUART_Slave(uint8_t *pbyData, uint16_t uCount, uint8_t port);
 uint8_t * GetSlave_MemoryAddr(uint8_t select, uint8_t port);
+uint32_t Modbus_Slave0_Wait3_5char();
 #endif
 
 
 
 void PIT0_Configuration(void);
-uint32_t PIT0_Wait3_5char();
+
 void UART1_Configuration(uint32_t buadrate);
 void UART2_Configuration(uint32_t buadrate);
 uint32_t PIT0_Value_Get();

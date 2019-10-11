@@ -34,6 +34,8 @@
 
 #include "ModbusSlaveApp.h"
 
+#ifdef MODBUS_SLAVE_USED
+
 /*******************************************************************************
 * Definitions
 ******************************************************************************/
@@ -52,51 +54,25 @@
 ******************************************************************************/
 
 
-
-//UART
-
-AT_NONCACHEABLE_SECTION_ALIGN(uint8_t g_txBuffer[MODBUS_BUFF_SIZE], 64);
-AT_NONCACHEABLE_SECTION_ALIGN(uint8_t g_rxBuffer[MODBUS_BUFF_SIZE], 64);
-
-
 //APP
 uint8_t g_ucMBUF[MODBUS_BUFF_SIZE];
 
-static void WaitWctClose(WDOG_Type *base);
+
 
 
 /*******************************************************************************
 * Code
 ******************************************************************************/
 
-
-
-/*******************************************************************************
-* WDT
-******************************************************************************/
-
-static void WaitWctClose(WDOG_Type *base)
+void ModbusNet1SlaveAPP()
 {
-  /* Accessing register by bus clock */
-  for (uint32_t i = 0; i < WDOG_WCT_INSTRUCITON_COUNT; i++)
-  {
-    (void)base->RSTCNT;
-  }
-}
+	
+	g_ucMBUF[0] = 0x12;
+	g_ucMBUF[1] = 0x34;
 
-
-void WDOG_Configuration()
-{
-  wdog_config_t config;
-  
-  WDOG_GetDefaultConfig(&config);
-  //config.timeoutValue = 0x7ffU;
-  
-  WDOG_Init(WDOG, &config);
-  WaitWctClose(WDOG);
-  
 }
 
 
 
+#endif
 

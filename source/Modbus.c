@@ -120,9 +120,14 @@ void ModbusSlaveMainProcess(uint8_t port)
 
 void ModbusSlavePollSend(uint8_t port)
 {
+  
   if((g_ModbusSlavePort[port].SendFlag == MODBUS_SEND)&&(port < MODBUS_SLAVE_NUMBER))
   {
+    #if TIMER_MINUS == 1
     if((g_ModbusSlavePort[port].SendStartTime - g_ModbusSlavePort[port].Timer0_Value_Get()) > g_ModbusSlavePort[0].Timer0_Wait3_5char())
+	#else
+	if((g_ModbusSlavePort[port].Timer0_Value_Get() - g_ModbusSlavePort[port].SendStartTime) > g_ModbusSlavePort[0].Timer0_Wait3_5char())
+	#endif
     {
       g_ModbusSlavePort[port].UART_SendData((unsigned char *)&g_ModbusSlavePort[port].s_TxBuf.byData, g_ModbusSlavePort[port].g_ucSendLen, port);
       g_ModbusSlavePort[port].g_ucSendLen = 0;

@@ -1,7 +1,7 @@
 /*
 * The Clear BSD License
-* Copyright (c) 2015, Freescale Semiconductor, Inc.
-* Copyright 2016-2017 NXP
+* Copyright (c) 2019 Liang.Yang
+* Copyright 2019-2019 Liang.Yang <WeChat:kala4tgo><Email:17389711@qq.com>
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification,
@@ -31,58 +31,102 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef __MODBUSSLAVEAPP_H__
-
-#define __MODBUSSLAVEAPP_H__
-
-
-#include "fsl_common.h"
 
 #include "fsl_debug_console.h"
 #include "board.h"
-#include "fsl_cadc.h"
 #include "fsl_dmamux.h"
 #include "fsl_edma.h"
 #include "fsl_pit.h"
-#include "fsl_cmp.h"
-#include "fsl_dac.h"
-#include "fsl_ftm.h"
-#include "fsl_xbara.h"
-#include "fsl_edma.h"
-#include "fsl_uart_edma.h"
-#include "fsl_flash.h"
-#include "fsl_port.h"
-#include "fsl_pwm.h"
 #include "fsl_wdog.h"
-#include "Modbus.h"
 
 #include "pin_mux.h"
 #include "clock_config.h"
-#if defined(__cplusplus)
-extern "C" {
-#endif
-  
-  
-  /*******************************************************************************
-  * Definitions
-  ******************************************************************************/
-  
-  
+
+#include "Modbus.h"
+#include "ModbusMasterApp.h"
+#include "ModbusSlaveApp.h"
+
+
+/*******************************************************************************
+* Definitions
+******************************************************************************/
+
 #define WDOG_WCT_INSTRUCITON_COUNT (256U)
 
-  
-  /*******************************************************************************
-  * API
-  ******************************************************************************/
-  
-  
-  void WDOG_Configuration();
-  
-  
-#if defined(__cplusplus)
+
+/*******************************************************************************
+* Prototypes
+******************************************************************************/
+static void WaitWctClose(WDOG_Type *base);
+
+
+
+/*******************************************************************************
+* Variables
+******************************************************************************/
+
+/*******************************************************************************
+* Code
+******************************************************************************/
+
+static void WaitWctClose(WDOG_Type *base)
+{
+  /* Accessing register by bus clock */
+  for (uint32_t i = 0; i < WDOG_WCT_INSTRUCITON_COUNT; i++)
+  {
+    (void)base->RSTCNT;
+  }
 }
+
+
+void WDOG_Configuration()
+{
+  wdog_config_t config;
+  
+  WDOG_GetDefaultConfig(&config);
+  //config.timeoutValue = 0x7ffU;
+  
+  WDOG_Init(WDOG, &config);
+  WaitWctClose(WDOG);
+  
+}
+
+
+
+/*!
+* @brief Main function
+*/
+int main(void)
+{
+  BOARD_InitPins();
+  BOARD_BootClockRUN();
+  //WDOG_Configuration();
+  
+#ifdef MODBUS_SLAVE_USED
+  ModbusSlaveInitPort(0);
 #endif
+  
+#ifdef MODBUS_MASTER_USED
+  MB_Init();
+  ModbusMasterInitPort(0);
+#endif
+  
+  while (1)
+  {
+#ifdef MODBUS_SLAVE_USED
+    ModbusSlaveMainProcess(SLAVE_PORT0);
+    ModbusSlavePollSend(SLAVE_PORT0);
+    ModbusNet1SlaveAPP();
+#endif
+    
+#ifdef MODBUS_MASTER_USED
+    ModbusNet1MasterAPP();
+    ModbusMasterSendMessage(MASTER_PORT0);
+    ModbusMasterMainReceive(MASTER_PORT0);
+#endif
+    
+    //WDOG_Refresh(WDOG);
+  }
+}
 
-/*! @}*/
 
-#endif /* _FSL_PIT_H_ */

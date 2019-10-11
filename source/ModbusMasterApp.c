@@ -35,7 +35,7 @@
 #include "Modbus.h"
 #include "ModbusMasterApp.h"
 
-
+#ifdef MODBUS_MASTER_USED
 
 /*******************************************************************************
 * Definitions
@@ -275,4 +275,4 @@ static uint8_t ModbusNet1Checking(uint8_t status)
   return ret;
 }
 
-
+#endif

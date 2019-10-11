@@ -1,7 +1,7 @@
 /*
 * The Clear BSD License
-* Copyright (c) 2019 Liang.Yang
-* Copyright 2019-2019 Liang.Yang <WeChat:kala4tgo><Email:17389711@qq.com>
+* Copyright (c) 2015, Freescale Semiconductor, Inc.
+* Copyright 2016-2017 NXP
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification,
@@ -31,78 +31,50 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef __MODBUSSLAVEAPP_H__
+
+#define __MODBUSSLAVEAPP_H__
+
+
+#include "fsl_common.h"
 
 #include "fsl_debug_console.h"
 #include "board.h"
-#include "fsl_cadc.h"
 #include "fsl_dmamux.h"
 #include "fsl_edma.h"
 #include "fsl_pit.h"
+#include "fsl_edma.h"
+#include "fsl_uart_edma.h"
+#include "Modbus.h"
 
 #include "pin_mux.h"
 #include "clock_config.h"
-
-#include "Modbus.h"
-#include "ModbusMasterApp.h"
-#include "ModbusSlaveApp.h"
-
-
-/*******************************************************************************
-* Definitions
-******************************************************************************/
-
-
-
-/*******************************************************************************
-* Prototypes
-******************************************************************************/
-
-
-
-/*******************************************************************************
-* Variables
-******************************************************************************/
-
-/*******************************************************************************
-* Code
-******************************************************************************/
-
-
-
-
-/*!
-* @brief Main function
-*/
-int main(void)
-{
-  BOARD_InitPins();
-  BOARD_BootClockRUN();
-  //WDOG_Configuration();
-
-  #ifdef MODBUS_SLAVE_USED
-  ModbusSlaveInitPort(0);
-  #endif
-
-  #ifdef MODBUS_MASTER_USED
-  MB_Init();
-  ModbusMasterInitPort(0);
-  #endif
+#if defined(__cplusplus)
+extern "C" {
+#endif
   
-  while (1)
-  {
-    #ifdef MODBUS_SLAVE_USED
-    ModbusSlaveMainProcess(SLAVE_PORT0);
-    ModbusSlavePollSend(SLAVE_PORT0);
-	#endif
+  
+  /*******************************************************************************
+  * Definitions
+  ******************************************************************************/
+  
+  
 
-	#ifdef MODBUS_MASTER_USED
-    ModbusNet1MasterAPP();
-    ModbusMasterSendMessage(MASTER_PORT0);
-    ModbusMasterMainReceive(MASTER_PORT0);
-	#endif
-    
-    //WDOG_Refresh(WDOG);
-  }
+
+  
+  /*******************************************************************************
+  * API
+  ******************************************************************************/
+  
+  
+void ModbusNet1SlaveAPP();
+
+  
+  
+#if defined(__cplusplus)
 }
+#endif
 
+/*! @}*/
 
+#endif /* _FSL_PIT_H_ */

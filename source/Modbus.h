@@ -37,6 +37,7 @@
 #define __MODBUS_H__
 
 #include "Modbus_Porting.h"
+#include "ModbusUserConfig.h"
 
 #include <stdint.h>
 
@@ -158,7 +159,7 @@ Modbus_Port;
 * API
 ******************************************************************************/
 
-uint8_t * Get_MemoryAddr(uint8_t select, uint8_t port);
+//uint8_t * Get_MemoryAddr(uint8_t select, uint8_t port);
 
 #ifdef MODBUS_SLAVE_USED
 void ModbusSlaveInitPort(uint8_t port);
