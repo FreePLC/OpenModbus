@@ -162,7 +162,7 @@ Modbus_Port;
 //uint8_t * Get_MemoryAddr(uint8_t select, uint8_t port);
 
 #ifdef MODBUS_SLAVE_USED
-void ModbusSlaveInitPort(uint8_t port);
+void Slave0_InitPort(uint8_t port);
 void ModbusSlaveMainProcess(uint8_t port);
 uint8_t ModbusSlaveReceiveInt(uint8_t *pbyData, uint16_t uCount,uint8_t port);
 void ModbusSlavePollSend(uint8_t port);

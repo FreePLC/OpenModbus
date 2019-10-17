@@ -317,7 +317,9 @@ status_t UART_Init(UART_Type *base, const uart_config_t *config, uint32_t srcClo
     if (config->enableRxRTS)
     {
         /* Enable receiver RTS(request-to-send) function. */
-        base->MODEM |= UART_MODEM_RXRTSE_MASK;
+        base->MODEM |= UART_MODEM_TXRTSE_MASK;
+		base->MODEM |= UART_MODEM_TXRTSPOL_MASK;
+
     }
     if (config->enableTxCTS)
     {
@@ -713,6 +715,9 @@ void UART_WriteBlocking(UART_Type *base, const uint8_t *data, size_t length)
         {
         }
         base->D = *(data++);
+		while (!(base->S1 & UART_S1_TC_MASK))
+        {
+        }
     }
 }
 

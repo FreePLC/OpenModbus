@@ -40,53 +40,56 @@
 #include "fsl_pit.h"
 #include "fsl_port.h"
 #include "fsl_uart.h"
+#include "fsl_gpio.h"
+#include "fsl_edma.h"
+#include "fsl_dmamux.h"
+#include "fsl_uart_edma.h"
+
 
 
 /*******************************************************************************
 * Definitions
 ******************************************************************************/
 
-//UART
-#define UART_DMA_USED      1
-#define UART_TX_DMA        1
-#define UART_RX_DMA		   0
-
-
-#if UART_DMA_USED
-#include "fsl_edma.h"
-#include "fsl_dmamux.h"
-#include "fsl_uart_edma.h"
-#endif
-
 
 #ifdef MODBUS_MASTER_USED
 
-#define MODBUS_UART1_BAUDRATE  115200
+#define MASTER0_DMA_USED      1
+#define MASTER0_TX_DMA        1
+#define MASTER0_RX_DMA        0
+
+
+#define MASTER0_RS485_GPIO	       0
+
+#define MASTER0_UART_BAUDRATE  115200
 //UART0 for Master
-#define UART1_Rx_IRQ        	UART2_RX_TX_IRQn
-#define MODBUS_MASTER_Rx1_ISR   UART2_RX_TX_IRQHandler
+#define MASTER0_UART_Rx_IRQ        	UART2_RX_TX_IRQn
+#define MASTER0_Rx_ISR   UART2_RX_TX_IRQHandler
 
-#define MODBUS_UART1 			UART2
-#define MODBUS_UART1_CLKSRC 	kCLOCK_BusClk
-#define MODBUS_UART1_CLK_FREQ 	CLOCK_GetFreq(MODBUS_UART1_CLKSRC)
+#define MASTER0_UART 			UART2
+#define MASTER0_UART_CLKSRC 	kCLOCK_BusClk
+#define MASTER0_UART_CLK_FREQ 	CLOCK_GetFreq(MASTER0_UART_CLKSRC)
 
-#define UART1_TX_PORT		PORTD
-#define UART1_TX_PIN        3
-#define UART1_TX_ALT		kPORT_MuxAlt3
+#define MASTER0_TX_PORT		PORTD
+#define MASTER0_TX_PIN        3
+#define MASTER0_TX_ALT		kPORT_MuxAlt3
 
-#define UART1_RX_PORT		PORTD
-#define UART1_RX_PIN        2
-#define UART1_RX_ALT		kPORT_MuxAlt3
+#define MASTER0_RX_PORT		PORTD
+#define MASTER0_RX_PIN        2
+#define MASTER0_RX_ALT		kPORT_MuxAlt3
 
-#define UART1_RTS_PORT		PORTD
-#define UART1_RTS_PIN       0
-#define UART1_RTS_ALT		kPORT_MuxAlt3
+#define MASTER0_RTS_PORT		PORTD
+#define MASTER0_RTS_GPIO		GPIOD
+#define MASTER0_RTS_PIN       0
+#define MASTER0_RTS_ALT		kPORT_MuxAlt3
 
-#if UART_DMA_USED
+#if MASTER0_DMA_USED
 #define UART_DMAMUX_BASEADDR DMAMUX0
 #define UART_DMA_BASEADDR DMA0
-#define UART_TX1_DMA_REQUEST kDmaRequestMux0UART2Tx
-#define UART_RX1_DMA_REQUEST kDmaRequestMux0UART2Rx
+#define MASTER0_TX_DMA_REQUEST kDmaRequestMux0UART2Tx
+#define MASTER0_RX_DMA_REQUEST kDmaRequestMux0UART2Rx
+#define MASTER0_TX_DMA_CHANNEL 4U
+#define MASTER0_RX_DMA_CHANNEL 5U
 #endif
 
 
@@ -94,46 +97,43 @@
 
 #ifdef MODBUS_SLAVE_USED
 
-#define MODBUS_UART2_BAUDRATE  115200
+#define SLAVE0_DMA_USED      1
+#define SLAVE0_TX_DMA        1
+#define SLAVE0_RX_DMA        0
+
+
+#define SLAVE0_UART_BAUDRATE  115200
 //UART1 for Slave
-#define UART2_Rx_IRQ        	UART0_RX_TX_IRQn
-#define MODBUS_SLAVE_Rx_ISR     UART0_RX_TX_IRQHandler
+#define SLAVE0_UART_Rx_IRQ        	UART0_RX_TX_IRQn
+#define SLAVE0_Rx_ISR     UART0_RX_TX_IRQHandler
 
-#define MODBUS_UART2 			UART0
-#define MODBUS_UART2_CLKSRC 	kCLOCK_CoreSysClk
-#define MODBUS_UART2_CLK_FREQ 	CLOCK_GetFreq(MODBUS_UART2_CLKSRC)
+#define SLAVE0_UART 			UART0
+#define SLAVE0_UART_CLKSRC 	kCLOCK_CoreSysClk
+#define SLAVE0_UART_CLK_FREQ 	CLOCK_GetFreq(SLAVE0_UART_CLKSRC)
 
-#define UART2_TX_PORT		PORTB
-#define UART2_TX_PIN        17
-#define UART2_TX_ALT		kPORT_MuxAlt3
+#define SLAVE0_TX_PORT		PORTB
+#define SLAVE0_TX_PIN        17
+#define SLAVE0_TX_ALT		kPORT_MuxAlt3
 
-#define UART2_RX_PORT		PORTB
-#define UART2_RX_PIN        16
-#define UART2_RX_ALT		kPORT_MuxAlt3
+#define SLAVE0_RX_PORT		PORTB
+#define SLAVE0_RX_PIN        16
+#define SLAVE0_RX_ALT		kPORT_MuxAlt3
 
-#define UART2_RTS_PORT		PORTB
-#define UART2_RTS_PIN       3
-#define UART2_RTS_ALT		kPORT_MuxAlt3
+#define SLAVE0_RTS_PORT		PORTB
+#define SLAVE0_RTS_GPIO		GPIOB
+#define SLAVE0_RTS_PIN       3
+#define SLAVE0_RTS_ALT		kPORT_MuxAlt3
 
-#if UART_DMA_USED
+#if SLAVE0_DMA_USED
 #define UART_DMAMUX_BASEADDR DMAMUX0
 #define UART_DMA_BASEADDR DMA0
-#define UART_TX2_DMA_REQUEST kDmaRequestMux0UART0Tx
-#define UART_RX2_DMA_REQUEST kDmaRequestMux0UART0Rx
+#define SLAVE0_TX_DMA_REQUEST kDmaRequestMux0UART0Tx
+#define SLAVE0_RX_DMA_REQUEST kDmaRequestMux0UART0Rx
+#define SLAVE0_TX_DMA_CHANNEL 6U
+#define SLAVE0_RX_DMA_CHANNEL 7U
 #endif
 
 
-#endif
-
-
-#if UART_TX_DMA
-#define UART1_TX_DMA_CHANNEL 4U
-#define UART2_TX_DMA_CHANNEL 6U
-#endif
-
-#if UART_RX_DMA
-#define UART1_RX_DMA_CHANNEL 5U
-#define UART2_RX_DMA_CHANNEL 7U
 #endif
 
 
@@ -186,27 +186,27 @@
 
 
 #ifdef MODBUS_MASTER_USED
-void SendUART_Master(uint8_t *pbyData, uint16_t uCount, uint8_t port);
-void ModbusMasterInitPort(uint8_t port);
+void Master0_SendUart(uint8_t *pbyData, uint16_t uCount, uint8_t port);
+void Master0_InitPort(uint8_t port);
 uint8_t * GetMaster_MemoryAddr(uint8_t select, uint8_t port);
-uint32_t Modbus_Master0_Wait3_5char();
+uint32_t Master0_Wait3_5char();
 
 #endif
 
 
 #ifdef MODBUS_SLAVE_USED
-void ModbusSlaveInitPort(uint8_t port);
-void SendUART_Slave(uint8_t *pbyData, uint16_t uCount, uint8_t port);
+void Slave0_InitPort(uint8_t port);
+void Slave0_SendUart(uint8_t *pbyData, uint16_t uCount, uint8_t port);
 uint8_t * GetSlave_MemoryAddr(uint8_t select, uint8_t port);
-uint32_t Modbus_Slave0_Wait3_5char();
+uint32_t Slave0_Wait3_5char();
 #endif
 
 
 
 void PIT0_Configuration(void);
 
-void UART1_Configuration(uint32_t buadrate);
-void UART2_Configuration(uint32_t buadrate);
+void Master0_UART_Configuration(uint32_t buadrate);
+void Slave0_UART_Configuration(uint32_t buadrate);
 uint32_t PIT0_Value_Get();
 void User_Memcpy(uint8_t *dst, uint8_t *src, uint32_t len);
 

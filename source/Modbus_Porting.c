@@ -55,39 +55,42 @@
 
 //Need to Change
 #ifdef MODBUS_MASTER_USED
-UART_Type *const s_MasteruartBase[MODBUS_MASTER_NUMBER] = {MODBUS_UART1};
-uint32_t g_u32ModbusBuadrate[MODBUS_MASTER_NUMBER] = {MODBUS_UART1_BAUDRATE};
-#endif
+UART_Type *const s_MasteruartBase[MODBUS_MASTER_NUMBER] = {MASTER0_UART};
+uint32_t g_u32ModbusBuadrate[MODBUS_MASTER_NUMBER] = {MASTER0_UART_BAUDRATE};
 
 
 //TX
-#if UART_TX_DMA
-volatile bool g_Transfer_UART1_Tx_Done = false; /* DMA transfer completion flag. */
-edma_handle_t g_EDMA_UART1_Tx_Handle; /* Edma handler. */
-edma_transfer_config_t g_UART1_Tx_transferConfig;
-
-volatile bool g_Transfer_UART2_Tx_Done = false; /* DMA transfer completion flag. */
-edma_handle_t g_EDMA_UART2_Tx_Handle; /* Edma handler. */
-edma_transfer_config_t g_UART2_Tx_transferConfig;
-
+#if MASTER0_TX_DMA
+edma_handle_t g_EDMA_MASTER0_Tx_Handle; /* Edma handler. */
+edma_transfer_config_t g_MASTER0_Tx_transferConfig;
 #endif
 
 //RX
-#if UART_RX_DMA
-volatile bool g_Transfer_UART1_Rx_Done = false; /* DMA transfer completion flag. */
-edma_handle_t g_EDMA_UART1_Rx_Handle; /* Edma handler. */
-edma_transfer_config_t g_UART1_Rx_transferConfig;
+#if MASTER0_RX_DMA
+edma_handle_t g_EDMA_MASTER0_Rx_Handle; /* Edma handler. */
+edma_transfer_config_t g_MASTER0_Rx_transferConfig;
+#endif
 
-volatile bool g_Transfer_UART2_Rx_Done = false; /* DMA transfer completion flag. */
-edma_handle_t g_EDMA_UART2_Rx_Handle; /* Edma handler. */
-edma_transfer_config_t g_UART2_Rx_transferConfig;
 
 #endif
 
+
+
 #ifdef MODBUS_SLAVE_USED
-UART_Type *const s_SlaveuartBase[MODBUS_SLAVE_NUMBER] = {MODBUS_UART2};
+UART_Type *const s_SlaveuartBase[MODBUS_SLAVE_NUMBER] = {SLAVE0_UART};
 extern Modbus_Port g_ModbusSlavePort[];
 extern uint8_t g_ucMBUF[MODBUS_BUFF_SIZE];
+
+#if SLAVE0_TX_DMA
+edma_handle_t g_EDMA_SLAVE0_Tx_Handle; /* Edma handler. */
+edma_transfer_config_t g_SLAVE0_Tx_transferConfig;
+#endif
+
+#if SLAVE0_RX_DMA
+edma_handle_t g_EDMA_SLAVE0_Rx_Handle; /* Edma handler. */
+edma_transfer_config_t g_SLAVE0_Rx_transferConfig;
+
+#endif
 
 #endif
 
@@ -129,15 +132,22 @@ void PIT0_Configuration(void)
 
 #ifdef MODBUS_SLAVE_USED
 
-void UART2_Configuration(uint32_t buadrate)
+void Slave0_UART_Configuration(uint32_t buadrate)
 {
   uart_config_t uartConfig;
   //edma_config_t config;
   //uart_transfer_t sendXfer;
-#if UART_DMA_USED
+#if SLAVE0_DMA_USED
   edma_config_t userConfig;
 #endif
   port_pin_config_t pin_config;
+
+#if SLAVE0_RS485_GPIO
+	gpio_pin_config_t output_config = {
+	  kGPIO_DigitalOutput, 0,
+	};
+#endif
+
 
   CLOCK_EnableClock(kCLOCK_PortB);							 /* Port B Clock Gate Control: Clock enabled */
   
@@ -152,85 +162,92 @@ void UART2_Configuration(uint32_t buadrate)
   pin_config.driveStrength = kPORT_LowDriveStrength;
   pin_config.lockRegister = kPORT_UnlockRegister;
   //pin_config.openDrainEnable = kPORT_OpenDrainDisable;
-  pin_config.mux = UART2_TX_ALT;
+  pin_config.mux = SLAVE0_TX_ALT;
   pin_config.passiveFilterEnable = kPORT_PassiveFilterDisable;
   
-  PORT_SetPinConfig(UART2_TX_PORT, UART2_TX_PIN, &pin_config);
-  pin_config.mux = UART2_RX_ALT;
-  PORT_SetPinConfig(UART2_RX_PORT, UART2_RX_PIN, &pin_config);
-#if UART_RX_DMA
+  PORT_SetPinConfig(SLAVE0_TX_PORT, SLAVE0_TX_PIN, &pin_config);
+  pin_config.mux = SLAVE0_RX_ALT;
+  PORT_SetPinConfig(SLAVE0_RX_PORT, SLAVE0_RX_PIN, &pin_config);
+  pin_config.mux = SLAVE0_RTS_ALT;
+  PORT_SetPinConfig(SLAVE0_RTS_PORT, SLAVE0_RTS_PIN, &pin_config);
+
+#if SLAVE0_RS485_GPIO
+  output_config.outputLogic = 0;
+  GPIO_PinInit(SLAVE0_RTS_GPIO, SLAVE0_RTS_PIN, &output_config);
+#endif
+
+#if SLAVE0_RX_DMA
   uartConfig.rxFifoWatermark = 1;
 #endif
   
-  UART_Init(MODBUS_UART2, &uartConfig, MODBUS_UART2_CLK_FREQ);
+  UART_Init(SLAVE0_UART, &uartConfig, SLAVE0_UART_CLK_FREQ);
   
   
-#if UART_TX_DMA
-  UART_EnableTxDMA(MODBUS_UART2, true);
+#if SLAVE0_TX_DMA
+  UART_EnableTxDMA(SLAVE0_UART, true);
 #endif
   
-#if UART_RX_DMA
+#if SLAVE0_RX_DMA
   /* Enable UART TX EDMA. */
-  UART_EnableRxDMA(MODBUS_UART2, true);
+  UART_EnableRxDMA(SLAVE0_UART, true);
 #else
-  UART_EnableInterrupts(MODBUS_UART2, kUART_RxDataRegFullInterruptEnable 
+  UART_EnableInterrupts(SLAVE0_UART, kUART_RxDataRegFullInterruptEnable 
   | kUART_RxOverrunInterruptEnable | kUART_NoiseErrorInterruptEnable | kUART_FramingErrorInterruptEnable
   | kUART_ParityErrorInterruptEnable);
-  EnableIRQ(UART2_Rx_IRQ);
+  EnableIRQ(SLAVE0_UART_Rx_IRQ);
 #endif
   
-#if UART_DMA_USED
+#if SLAVE0_DMA_USED
   /* Set channel for UART */
   DMAMUX_Init(UART_DMAMUX_BASEADDR);
   
-#if UART_TX_DMA
-  DMAMUX_SetSource(UART_DMAMUX_BASEADDR, UART2_TX_DMA_CHANNEL, UART_TX2_DMA_REQUEST);
-  DMAMUX_EnableChannel(UART_DMAMUX_BASEADDR, UART2_TX_DMA_CHANNEL);
+#if SLAVE0_TX_DMA
+  DMAMUX_SetSource(UART_DMAMUX_BASEADDR, SLAVE0_TX_DMA_CHANNEL, SLAVE0_TX_DMA_REQUEST);
+  DMAMUX_EnableChannel(UART_DMAMUX_BASEADDR, SLAVE0_TX_DMA_CHANNEL);
 #endif
   
-#if UART_RX_DMA
+#if SLAVE0_RX_DMA
   /* Set channel for UART */
-  DMAMUX_SetSource(UART_DMAMUX_BASEADDR, UART2_RX_DMA_CHANNEL, UART_RX2_DMA_REQUEST);
-  DMAMUX_EnableChannel(UART_DMAMUX_BASEADDR, UART2_RX_DMA_CHANNEL);
+  DMAMUX_SetSource(UART_DMAMUX_BASEADDR, SLAVE0_RX_DMA_CHANNEL, SLAVE0_RX_DMA_REQUEST);
+  DMAMUX_EnableChannel(UART_DMAMUX_BASEADDR, SLAVE0_RX_DMA_CHANNEL);
 #endif
   
 #endif
   
-#if UART_DMA_USED
+#if SLAVE0_DMA_USED
   
-  //UART2_TX
-#if UART_TX_DMA
+#if SLAVE0_TX_DMA
   
   EDMA_GetDefaultConfig(&userConfig);
   EDMA_Init(UART_DMA_BASEADDR, &userConfig);
-  EDMA_CreateHandle(&g_EDMA_UART2_Tx_Handle, UART_DMA_BASEADDR, UART2_TX_DMA_CHANNEL);
+  EDMA_CreateHandle(&g_EDMA_SLAVE0_Tx_Handle, UART_DMA_BASEADDR, SLAVE0_TX_DMA_CHANNEL);
   
 #if defined(FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT) && FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT
   /* Enable async DMA request. */
-  EDMA_EnableAsyncRequest(UART_DMA_BASEADDR, UART2_TX_DMA_CHANNEL, true);
+  EDMA_EnableAsyncRequest(UART_DMA_BASEADDR, SLAVE0_TX_DMA_CHANNEL, true);
 #endif /* FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT */
   
 #endif
   
-  //UART2_RX
-#if UART_RX_DMA
+
+#if SLAVE0_RX_DMA
   EDMA_GetDefaultConfig(&userConfig);
   EDMA_Init(UART_DMA_BASEADDR, &userConfig);
-  EDMA_CreateHandle(&g_EDMA_UART2_Rx_Handle, UART_DMA_BASEADDR, UART2_RX_DMA_CHANNEL);
+  EDMA_CreateHandle(&g_EDMA_SLAVE0_Rx_Handle, UART_DMA_BASEADDR, SLAVE0_RX_DMA_CHANNEL);
   
-  EDMA_PrepareTransfer(&g_UART2_Rx_transferConfig, (void *)UART_GetDataRegisterAddress(MODBUS_UART2), sizeof(uint8_t),
+  EDMA_PrepareTransfer(&g_SLAVE0_Rx_transferConfig, (void *)UART_GetDataRegisterAddress(SLAVE0_UART), sizeof(uint8_t),
                        (void *)&g_ModbusSlavePort[0].s_RxBuf.byData, sizeof(uint8_t), sizeof(uint8_t),
                        sizeof(g_ModbusSlavePort[0].s_RxBuf.byData), kEDMA_PeripheralToMemory);
   
   
-  EDMA_SubmitTransfer(&g_EDMA_UART2_Rx_Handle, &g_UART2_Rx_transferConfig);
+  EDMA_SubmitTransfer(&g_EDMA_SLAVE0_Rx_Handle, &g_SLAVE0_Rx_transferConfig);
   
 #if defined(FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT) && FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT
   /* Enable async DMA request. */
-  EDMA_EnableAsyncRequest(UART_DMA_BASEADDR, UART2_RX_DMA_CHANNEL, true);
+  EDMA_EnableAsyncRequest(UART_DMA_BASEADDR, SLAVE0_RX_DMA_CHANNEL, true);
 #endif /* FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT */
   /* Enable transfer. */
-  EDMA_StartTransfer(&g_EDMA_UART2_Rx_Handle);
+  EDMA_StartTransfer(&g_EDMA_SLAVE0_Rx_Handle);
   
 #endif
   
@@ -242,13 +259,13 @@ void UART2_Configuration(uint32_t buadrate)
 
 
 
-uint32_t Modbus_Slave0_Wait3_5char()
+uint32_t Slave0_Wait3_5char()
 {
-  return USEC_TO_COUNT(35*1000*1000/MODBUS_UART2_BAUDRATE,TIMER_SOURCE_CLOCK);
+  return USEC_TO_COUNT(35*1000*1000/SLAVE0_UART_BAUDRATE,TIMER_SOURCE_CLOCK);
 }
 
 
-void SendUART_Slave(uint8_t *pbyData, uint16_t uCount, uint8_t port)
+void Slave0_SendUart(uint8_t *pbyData, uint16_t uCount, uint8_t port)
 {
   
   if(pbyData != (unsigned char *)&g_ModbusSlavePort[0].s_TxBuf.byData)
@@ -269,25 +286,35 @@ void SendUART_Slave(uint8_t *pbyData, uint16_t uCount, uint8_t port)
   }
   
   
-#if UART_TX_DMA
+#if SLAVE0_TX_DMA
   
-  EDMA_PrepareTransfer(&g_UART2_Tx_transferConfig, (void*)g_ModbusSlavePort[port].s_TxBuf.byData, sizeof(uint8_t),
+  EDMA_PrepareTransfer(&g_SLAVE0_Tx_transferConfig, (void*)g_ModbusSlavePort[port].s_TxBuf.byData, sizeof(uint8_t),
                        (void *)UART_GetDataRegisterAddress(s_SlaveuartBase[port]), sizeof(uint8_t), sizeof(uint8_t),
                        uCount, kEDMA_MemoryToPeripheral);
-  EDMA_SubmitTransfer(&g_EDMA_UART2_Tx_Handle, &g_UART2_Tx_transferConfig);
-  EDMA_StartTransfer(&g_EDMA_UART2_Tx_Handle);
+  EDMA_SubmitTransfer(&g_EDMA_SLAVE0_Tx_Handle, &g_SLAVE0_Tx_transferConfig);
+  EDMA_StartTransfer(&g_EDMA_SLAVE0_Tx_Handle);
 #else
-  
+
+#if SLAVE0_RS485_GPIO  
+  GPIO_PortSet(SLAVE0_RTS_GPIO, 1 << SLAVE0_RTS_PIN);
+#endif
+
   UART_WriteBlocking(s_SlaveuartBase[port], (uint8_t *)g_ModbusSlavePort[port].s_TxBuf.byData, uCount);
+
+#if SLAVE0_RS485_GPIO  
+  GPIO_PortClear(SLAVE0_RTS_GPIO, 1 << SLAVE0_RTS_PIN);
+#endif
+
+
 #endif
 }
 
 
 
 
-void ModbusSlaveInitPort(uint8_t port)
+void Slave0_InitPort(uint8_t port)
 {
-  g_ModbusSlavePort[port].Local_Address = MODBUS_SLAVE0_ADDRESS;
+  g_ModbusSlavePort[port].Local_Address = SLAVE0_UART_ADDRESS;
   g_ModbusSlavePort[port].g_ucSendLen = 0;
   g_ModbusSlavePort[port].ReceiveFlag = 0;
   g_ModbusSlavePort[port].SendFlag = 0;
@@ -295,28 +322,28 @@ void ModbusSlaveInitPort(uint8_t port)
   g_ModbusSlavePort[port].ucSize = 0;
   g_ModbusSlavePort[port].Timer0_Init = PIT0_Configuration;
   g_ModbusSlavePort[port].Timer0_Value_Get = PIT0_Value_Get;
-  g_ModbusSlavePort[port].UART_SendData = SendUART_Slave;
-  g_ModbusSlavePort[port].Timer0_Wait3_5char = Modbus_Slave0_Wait3_5char;
-  g_ModbusSlavePort[port].UART_BaudrateSet = UART2_Configuration;
+  g_ModbusSlavePort[port].UART_SendData = Slave0_SendUart;
+  g_ModbusSlavePort[port].Timer0_Wait3_5char = Slave0_Wait3_5char;
+  g_ModbusSlavePort[port].UART_BaudrateSet = Slave0_UART_Configuration;
   
-  g_ModbusSlavePort[port].UART_BaudrateSet(MODBUS_UART2_BAUDRATE);
+  g_ModbusSlavePort[port].UART_BaudrateSet(SLAVE0_UART_BAUDRATE);
   g_ModbusSlavePort[port].Timer0_Init();
 }
-void MODBUS_SLAVE_Rx_ISR()
+void SLAVE0_Rx_ISR()
 {
   uint8_t data = 0, len = 0, i = 0;
   static uint32_t last_time = 0;
   uint32_t current_time = 0;
   
-  if((kUART_RxOverrunFlag|kUART_NoiseErrorFlag|kUART_FramingErrorFlag|kUART_ParityErrorFlag) & UART_GetStatusFlags(MODBUS_UART2))
+  if((kUART_RxOverrunFlag|kUART_NoiseErrorFlag|kUART_FramingErrorFlag|kUART_ParityErrorFlag) & UART_GetStatusFlags(SLAVE0_UART))
   {
-    data = UART_ReadByte(MODBUS_UART2); 
-    MODBUS_UART2->CFIFO |= (UART_CFIFO_TXFLUSH_MASK | UART_CFIFO_RXFLUSH_MASK);
+    data = UART_ReadByte(SLAVE0_UART); 
+    SLAVE0_UART->CFIFO |= (UART_CFIFO_TXFLUSH_MASK | UART_CFIFO_RXFLUSH_MASK);
     return;
   }
   
   /* If new data arrived. */
-  if ((kUART_RxDataRegFullFlag) & UART_GetStatusFlags(MODBUS_UART2))
+  if ((kUART_RxDataRegFullFlag) & UART_GetStatusFlags(SLAVE0_UART))
   {
     current_time =  g_ModbusSlavePort[SLAVE_PORT0].Timer0_Value_Get();
     #if TIMER_MINUS == 1
@@ -328,11 +355,11 @@ void MODBUS_SLAVE_Rx_ISR()
       g_ModbusSlavePort[SLAVE_PORT0].s_RxBuf.uCount = 0;
     }
     
-    len = MODBUS_UART2->RCFIFO;
+    len = SLAVE0_UART->RCFIFO;
     
     for(i = 0; i< len; i++)
     {
-      data = UART_ReadByte(MODBUS_UART2);    
+      data = UART_ReadByte(SLAVE0_UART);    
       g_ModbusSlavePort[SLAVE_PORT0].s_RxBuf.byData[g_ModbusSlavePort[SLAVE_PORT0].s_RxBuf.uCount++] = data;    
     }
     
@@ -389,15 +416,21 @@ uint8_t * GetSlave_MemoryAddr(uint8_t select, uint8_t port)
 
 #ifdef MODBUS_MASTER_USED
 
-void UART1_Configuration(uint32_t buadrate)
+void Master0_UART_Configuration(uint32_t buadrate)
 {
   uart_config_t uartConfig;
   //edma_config_t config;
   //uart_transfer_t sendXfer;
-#if UART_DMA_USED
+#if MASTER0_DMA_USED
   edma_config_t userConfig;
 #endif
   port_pin_config_t pin_config;
+
+#if MASTER0_RS485_GPIO
+  gpio_pin_config_t output_config = {
+    kGPIO_DigitalOutput, 0,
+  };
+#endif
 
   CLOCK_EnableClock(kCLOCK_PortD);							 /* Port B Clock Gate Control: Clock enabled */
 
@@ -413,55 +446,65 @@ void UART1_Configuration(uint32_t buadrate)
   pin_config.driveStrength = kPORT_LowDriveStrength;
   pin_config.lockRegister = kPORT_UnlockRegister;
   //pin_config.openDrainEnable = kPORT_OpenDrainDisable;
-  pin_config.mux = UART1_TX_ALT;
+  pin_config.mux = MASTER0_TX_ALT;
   pin_config.passiveFilterEnable = kPORT_PassiveFilterDisable;
   
-  PORT_SetPinConfig(UART1_TX_PORT, UART1_TX_PIN, &pin_config);
-  pin_config.mux = UART1_RX_ALT;
-  PORT_SetPinConfig(UART1_RX_PORT, UART1_RX_PIN, &pin_config);
-#if UART_RX_DMA
+  PORT_SetPinConfig(MASTER0_TX_PORT, MASTER0_TX_PIN, &pin_config);
+  pin_config.mux = MASTER0_RX_ALT;
+  PORT_SetPinConfig(MASTER0_RX_PORT, MASTER0_RX_PIN, &pin_config);
+  pin_config.mux = MASTER0_RTS_ALT;
+  PORT_SetPinConfig(MASTER0_RTS_PORT, MASTER0_RTS_PIN, &pin_config);
+
+
+
+#if MASTER0_RS485_GPIO
+  output_config.outputLogic = 0;
+  GPIO_PinInit(MASTER0_RTS_GPIO, MASTER0_RTS_PIN, &output_config);
+#endif
+  	
+#if MASTER0_RX_DMA
   uartConfig.rxFifoWatermark = 1;
 #endif
   
-  UART_Init(MODBUS_UART1, &uartConfig, MODBUS_UART1_CLK_FREQ);
+  UART_Init(MASTER0_UART, &uartConfig, MASTER0_UART_CLK_FREQ);
   
-#if UART_TX_DMA
-  UART_EnableTxDMA(MODBUS_UART1, true);
+#if MASTER0_TX_DMA
+  UART_EnableTxDMA(MASTER0_UART, true);
 #endif
   
-#if UART_RX_DMA
+#if MASTER0_RX_DMA
   /* Enable UART TX EDMA. */
-  UART_EnableRxDMA(MODBUS_UART1, true);
+  UART_EnableRxDMA(MASTER0_UART, true);
 #else
-  UART_EnableInterrupts(MODBUS_UART1, kUART_RxDataRegFullInterruptEnable 
+  UART_EnableInterrupts(MASTER0_UART, kUART_RxDataRegFullInterruptEnable 
   | kUART_RxOverrunInterruptEnable | kUART_NoiseErrorInterruptEnable | kUART_FramingErrorInterruptEnable
   | kUART_ParityErrorInterruptEnable);
-  EnableIRQ(UART1_Rx_IRQ);
+  EnableIRQ(MASTER0_UART_Rx_IRQ);
 #endif
   
-#if UART_DMA_USED
+#if MASTER0_DMA_USED
   /* Set channel for UART */
   DMAMUX_Init(UART_DMAMUX_BASEADDR);
-#if UART_TX_DMA
-  DMAMUX_SetSource(UART_DMAMUX_BASEADDR, UART1_TX_DMA_CHANNEL, UART_TX1_DMA_REQUEST);
-  DMAMUX_EnableChannel(UART_DMAMUX_BASEADDR, UART1_TX_DMA_CHANNEL);
+#if MASTER0_TX_DMA
+  DMAMUX_SetSource(UART_DMAMUX_BASEADDR, MASTER0_TX_DMA_CHANNEL, MASTER0_TX_DMA_REQUEST);
+  DMAMUX_EnableChannel(UART_DMAMUX_BASEADDR, MASTER0_TX_DMA_CHANNEL);
 #endif
   
-#if UART_RX_DMA
+#if MASTER0_RX_DMA
   /* Set channel for UART */
-  DMAMUX_SetSource(UART_DMAMUX_BASEADDR, UART1_RX_DMA_CHANNEL, UART_RX1_DMA_REQUEST);
-  DMAMUX_EnableChannel(UART_DMAMUX_BASEADDR, UART1_RX_DMA_CHANNEL);
+  DMAMUX_SetSource(UART_DMAMUX_BASEADDR, MASTER0_RX_DMA_CHANNEL, MASTER0_RX_DMA_REQUEST);
+  DMAMUX_EnableChannel(UART_DMAMUX_BASEADDR, MASTER0_RX_DMA_CHANNEL);
 #endif
   
 #endif
   
-#if UART_DMA_USED
-  //UART1_TX
-#if UART_TX_DMA
+#if MASTER0_DMA_USED
+
+#if MASTER0_TX_DMA
   
   EDMA_GetDefaultConfig(&userConfig);
   EDMA_Init(UART_DMA_BASEADDR, &userConfig);
-  EDMA_CreateHandle(&g_EDMA_UART1_Tx_Handle, UART_DMA_BASEADDR, UART1_TX_DMA_CHANNEL);
+  EDMA_CreateHandle(&g_EDMA_MASTER0_Tx_Handle, UART_DMA_BASEADDR, MASTER0_TX_DMA_CHANNEL);
   
 #if defined(FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT) && FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT
   /* Enable async DMA request. */
@@ -471,24 +514,24 @@ void UART1_Configuration(uint32_t buadrate)
 #endif
   
   //UART1_RX
-#if UART_RX_DMA
+#if MASTER0_RX_DMA
   EDMA_GetDefaultConfig(&userConfig);
   EDMA_Init(UART_DMA_BASEADDR, &userConfig);
-  EDMA_CreateHandle(&g_EDMA_UART1_Rx_Handle, UART_DMA_BASEADDR, UART1_RX_DMA_CHANNEL);
+  EDMA_CreateHandle(&g_EDMA_MASTER0_Rx_Handle, UART_DMA_BASEADDR, UART1_RX_DMA_CHANNEL);
   
-  EDMA_PrepareTransfer(&g_UART1_Rx_transferConfig, (void *)UART_GetDataRegisterAddress(MODBUS_UART1), sizeof(uint8_t),
+  EDMA_PrepareTransfer(&g_MASTER0_Rx_transferConfig, (void *)UART_GetDataRegisterAddress(MASTER0_UART), sizeof(uint8_t),
                        (void *)&g_ModbusMasterPort[0].s_RxBuf.byData, sizeof(uint8_t), sizeof(uint8_t),
                        sizeof(g_ModbusMasterPort[0].s_RxBuf.byData), kEDMA_PeripheralToMemory);
   
   
-  EDMA_SubmitTransfer(&g_EDMA_UART1_Rx_Handle, &g_UART1_Rx_transferConfig);
+  EDMA_SubmitTransfer(&g_EDMA_MASTER0_Rx_Handle, &g_MASTER0_Rx_transferConfig);
   
 #if defined(FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT) && FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT
   /* Enable async DMA request. */
   EDMA_EnableAsyncRequest(UART_DMA_BASEADDR, UART1_RX_DMA_CHANNEL, true);
 #endif /* FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT */
   /* Enable transfer. */
-  EDMA_StartTransfer(&g_EDMA_UART1_Rx_Handle);
+  EDMA_StartTransfer(&g_EDMA_MASTER0_Rx_Handle);
   
 #endif
   
@@ -499,12 +542,12 @@ void UART1_Configuration(uint32_t buadrate)
 }
 
 
-uint32_t Modbus_Master0_Wait3_5char()
+uint32_t Master0_Wait3_5char()
 {
-  return USEC_TO_COUNT(35*1000*1000/MODBUS_UART1_BAUDRATE,TIMER_SOURCE_CLOCK);
+  return USEC_TO_COUNT(35*1000*1000/MASTER0_UART_BAUDRATE,TIMER_SOURCE_CLOCK);
 }
 
-void SendUART_Master(uint8_t *pbyData, uint16_t uCount, uint8_t port)
+void Master0_SendUart(uint8_t *pbyData, uint16_t uCount, uint8_t port)
 {
   //unsigned char temp = 0;
   
@@ -525,23 +568,34 @@ void SendUART_Master(uint8_t *pbyData, uint16_t uCount, uint8_t port)
     uCount = sizeof(g_ModbusMasterPort[port].s_TxBuf.byData);
   }
   
-#if UART_TX_DMA
+#if MASTER0_TX_DMA
   
-  EDMA_PrepareTransfer(&g_UART1_Tx_transferConfig, (void*)g_ModbusMasterPort[port].s_TxBuf.byData, sizeof(uint8_t),
+  EDMA_PrepareTransfer(&g_MASTER0_Tx_transferConfig, (void*)g_ModbusMasterPort[port].s_TxBuf.byData, sizeof(uint8_t),
                        (void *)UART_GetDataRegisterAddress(s_MasteruartBase[port]), sizeof(uint8_t), sizeof(uint8_t),
                        uCount, kEDMA_MemoryToPeripheral);
-  EDMA_SubmitTransfer(&g_EDMA_UART1_Tx_Handle, &g_UART1_Tx_transferConfig);
-  EDMA_StartTransfer(&g_EDMA_UART1_Tx_Handle);
+  EDMA_SubmitTransfer(&g_EDMA_MASTER0_Tx_Handle, &g_MASTER0_Tx_transferConfig);
+  EDMA_StartTransfer(&g_EDMA_MASTER0_Tx_Handle);
 #else
-  
-  UART_WriteBlocking(s_MasteruartBase[port], (uint8_t *)g_ModbusMasterPort[port].s_TxBuf.byData, uCount);
+
+#if MASTER0_RS485_GPIO  
+  GPIO_PortSet(MASTER0_RTS_GPIO, 1 << MASTER0_RTS_PIN);
+#endif
+
+UART_WriteBlocking(s_MasteruartBase[port], (uint8_t *)g_ModbusMasterPort[port].s_TxBuf.byData, uCount);
+
+#if MASTER0_RS485_GPIO  
+  GPIO_PortClear(MASTER0_RTS_GPIO, 1 << MASTER0_RTS_PIN);
+#endif
+
+
+
 #endif
   
   
 }
 
 
-void ModbusMasterInitPort(uint8_t port)
+void Master0_InitPort(uint8_t port)
 {  
   g_ModbusMasterPort[port].Local_Address = 0;
   g_ModbusMasterPort[port].g_ucSendLen = 0;
@@ -551,11 +605,11 @@ void ModbusMasterInitPort(uint8_t port)
   g_ModbusMasterPort[port].ucSize = 0;
   g_ModbusMasterPort[port].Timer0_Init = PIT0_Configuration;
   g_ModbusMasterPort[port].Timer0_Value_Get = PIT0_Value_Get;
-  g_ModbusMasterPort[port].UART_SendData = SendUART_Master;
-  g_ModbusMasterPort[port].Timer0_Wait3_5char = Modbus_Master0_Wait3_5char;
+  g_ModbusMasterPort[port].UART_SendData = Master0_SendUart;
+  g_ModbusMasterPort[port].Timer0_Wait3_5char = Master0_Wait3_5char;
   
 
-  g_ModbusMasterPort[port].UART_BaudrateSet = UART1_Configuration;
+  g_ModbusMasterPort[port].UART_BaudrateSet = Master0_UART_Configuration;
   g_ModbusMasterPort[port].TimeOutLimit = NET1_TIMEOUT_LIMIT;			
   
   g_ModbusMasterPort[port].UART_BaudrateSet(g_u32ModbusBuadrate[port]);
@@ -564,22 +618,22 @@ void ModbusMasterInitPort(uint8_t port)
 }
 
 
-void MODBUS_MASTER_Rx1_ISR()
+void MASTER0_Rx_ISR()
 {
   uint8_t data = 0, len = 0, i = 0;
   static uint32_t last_time = 0;
   uint32_t current_time = 0;
   
-  if((kUART_RxOverrunFlag|kUART_NoiseErrorFlag|kUART_FramingErrorFlag|kUART_ParityErrorFlag) & UART_GetStatusFlags(MODBUS_UART1))
+  if((kUART_RxOverrunFlag|kUART_NoiseErrorFlag|kUART_FramingErrorFlag|kUART_ParityErrorFlag) & UART_GetStatusFlags(MASTER0_UART))
   {
-    data = UART_ReadByte(MODBUS_UART1); 
-    MODBUS_UART1->CFIFO |= (UART_CFIFO_TXFLUSH_MASK | UART_CFIFO_RXFLUSH_MASK);
+    data = UART_ReadByte(MASTER0_UART); 
+    MASTER0_UART->CFIFO |= (UART_CFIFO_TXFLUSH_MASK | UART_CFIFO_RXFLUSH_MASK);
     
     return;
   }
   
   /* If new data arrived. */
-  if ((kUART_RxDataRegFullFlag) & UART_GetStatusFlags(MODBUS_UART1))
+  if ((kUART_RxDataRegFullFlag) & UART_GetStatusFlags(MASTER0_UART))
   {
     current_time =  g_ModbusMasterPort[MASTER_PORT0].Timer0_Value_Get();
     #if TIMER_MINUS == 1
@@ -591,11 +645,11 @@ void MODBUS_MASTER_Rx1_ISR()
       g_ModbusMasterPort[MASTER_PORT0].s_RxBuf.uCount = 0;
     }
     
-    len = MODBUS_UART1->RCFIFO;
+    len = MASTER0_UART->RCFIFO;
     
     for(i = 0; i< len; i++)
     {
-      data = UART_ReadByte(MODBUS_UART1);  
+      data = UART_ReadByte(MASTER0_UART);  
       g_ModbusMasterPort[MASTER_PORT0].s_RxBuf.byData[g_ModbusMasterPort[MASTER_PORT0].s_RxBuf.uCount++] = data;    
     }
     
