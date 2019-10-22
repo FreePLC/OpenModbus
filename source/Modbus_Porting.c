@@ -71,6 +71,9 @@ edma_handle_t g_EDMA_MASTER0_Rx_Handle; /* Edma handler. */
 edma_transfer_config_t g_MASTER0_Rx_transferConfig;
 #endif
 
+extern MODBUS_PROCESStyp g_MProcess[MODBUS_MASTER_NUMBER];
+extern Modbus_Port g_ModbusMasterPort[MODBUS_MASTER_NUMBER];
+extern uint8_t g_u8MasterBuf[MODBUS_MASTER_NUMBER][PLC_MEMORY_LEN];
 
 #endif
 
@@ -94,11 +97,6 @@ edma_transfer_config_t g_SLAVE0_Rx_transferConfig;
 
 #endif
 
-#ifdef MODBUS_MASTER_USED
-extern MODBUS_PROCESStyp g_MProcess[MODBUS_MASTER_NUMBER];
-extern Modbus_Port g_ModbusMasterPort[MODBUS_MASTER_NUMBER];
-extern uint8_t g_u8MasterBuf[MODBUS_MASTER_NUMBER][PLC_MEMORY_LEN];
-#endif
 
 
 
@@ -508,7 +506,7 @@ void Master0_UART_Configuration(uint32_t buadrate)
   
 #if defined(FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT) && FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT
   /* Enable async DMA request. */
-  EDMA_EnableAsyncRequest(UART_DMA_BASEADDR, UART1_TX_DMA_CHANNEL, true);
+  EDMA_EnableAsyncRequest(UART_DMA_BASEADDR, MASTER0_TX_DMA_CHANNEL, true);
 #endif /* FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT */
   
 #endif

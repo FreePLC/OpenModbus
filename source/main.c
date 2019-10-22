@@ -103,12 +103,12 @@ int main(void)
   //WDOG_Configuration();
   
 #ifdef MODBUS_SLAVE_USED
-  Slave0_InitPort(0);
+  Slave0_InitPort(SLAVE_PORT0);
 #endif
   
 #ifdef MODBUS_MASTER_USED
   MB_Init();
-  Master0_InitPort(0);
+  Master0_InitPort(MASTER_PORT0);
 #endif
   
   while (1)
