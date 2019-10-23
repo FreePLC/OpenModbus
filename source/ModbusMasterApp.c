@@ -132,7 +132,7 @@ void ModbusNet1MasterAPP()
         
         //ÇÐ»»×´Ì¬
         g_MBNet1_task.pending_status = NET1_DEVICE2_WRITE;
-        g_MBNet1_task.next_status = NET1_DEVICE1_READ;
+        g_MBNet1_task.next_status = NET1_DEVICE2_READ;
         g_MBNet1_task.delay = MSEC_TO_COUNT(NET1_DELAY_MS,TIMER_SOURCE_CLOCK);
         g_MBNet1_task.time = g_ModbusMasterPort[MASTER_PORT0].Timer0_Value_Get();
         g_MBNet1_task.status = NET1_WAIT;
@@ -155,7 +155,7 @@ void ModbusNet1MasterAPP()
         
         //ÇÐ»»×´Ì¬
         g_MBNet1_task.pending_status = NET1_DEVICE1_READ;
-        g_MBNet1_task.next_status = NET1_DEVICE2_READ;
+        g_MBNet1_task.next_status = NET1_DEVICE2_WRITE;
         g_MBNet1_task.delay = MSEC_TO_COUNT(NET1_DELAY_MS,TIMER_SOURCE_CLOCK);
         g_MBNet1_task.time = g_ModbusMasterPort[MASTER_PORT0].Timer0_Value_Get();
         g_MBNet1_task.status = NET1_WAIT;
