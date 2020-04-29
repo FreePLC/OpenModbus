@@ -195,7 +195,7 @@ uint32_t Master0_Wait3_5char();
 
 
 #ifdef MODBUS_SLAVE_USED
-void Slave0_InitPort(uint8_t port);
+void Slave0_InitPort(uint8_t port, uint8_t slave_addr);
 void Slave0_SendUart(uint8_t *pbyData, uint16_t uCount, uint8_t port);
 uint8_t * GetSlave_MemoryAddr(uint8_t select, uint8_t port);
 uint32_t Slave0_Wait3_5char();

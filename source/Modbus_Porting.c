@@ -310,9 +310,9 @@ void Slave0_SendUart(uint8_t *pbyData, uint16_t uCount, uint8_t port)
 
 
 
-void Slave0_InitPort(uint8_t port)
+void Slave0_InitPort(uint8_t port, uint8_t slave_addr)
 {
-  g_ModbusSlavePort[port].Local_Address = SLAVE0_UART_ADDRESS;
+  g_ModbusSlavePort[port].Local_Address = slave_addr;
   g_ModbusSlavePort[port].g_ucSendLen = 0;
   g_ModbusSlavePort[port].ReceiveFlag = 0;
   g_ModbusSlavePort[port].SendFlag = 0;

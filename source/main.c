@@ -45,6 +45,7 @@
 #include "Modbus.h"
 #include "ModbusMasterApp.h"
 #include "ModbusSlaveApp.h"
+#include "ModbusUserConfig.h"
 
 
 /*******************************************************************************
@@ -103,7 +104,7 @@ int main(void)
   //WDOG_Configuration();
   
 #ifdef MODBUS_SLAVE_USED
-  Slave0_InitPort(SLAVE_PORT0);
+  Slave0_InitPort(SLAVE_PORT0, MODBUS_SLAVE0_ADDRESS);
 #endif
   
 #ifdef MODBUS_MASTER_USED

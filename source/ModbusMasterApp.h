@@ -44,17 +44,13 @@
 //status
 
 //NET1
-#define NET1_DEVICE1_WRITE    					0
+#define NET_DEVICE_WRITE    					0
 
-#define NET1_DEVICE2_WRITE    					1
+#define NET_DEVICE_READ    					2
 
-#define NET1_DEVICE1_READ    					2
+#define NET_STOP    						4
 
-#define NET1_DEVICE2_READ    					3
-
-#define NET1_STOP    							4
-
-#define NET1_WAIT  	  					    	5
+#define NET_WAIT  	  					    5
 
 
 //parameter
@@ -90,8 +86,6 @@
 #define NET1_DELAY_MS					1000
 
 
-
-
 typedef struct
 {
   uint8_t	status;
@@ -103,13 +97,26 @@ typedef struct
 }MODBUS_TASK_STRUC_T;
 
 
+typedef struct
+{
+  uint16_t Offset;					//用户数据区偏移
+  uint16_t Number;					//寄存器个数
+  uint16_t RegisterAddress;			//寄存器地址
+  uint8_t SlaveAddress;				//从站地址
+  uint32_t TimeOut;					//超时时间
+  uint8_t Function;					//功能码
+}
+MODBUS_SLAVELISTtyp;
+
+
+
 /*******************************************************************************
 * API
 ******************************************************************************/
 
 
-void MB_Init();
-void ModbusNet1MasterAPP();
+void MB_Init(void);
+void ModbusNet1MasterAPP(void);
 static uint8_t ModbusNet1Checking(uint8_t status);
 
 

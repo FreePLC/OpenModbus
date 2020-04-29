@@ -39,6 +39,10 @@
 #include "Modbus_Porting.h"
 #include "ModbusUserConfig.h"
 
+#ifdef MODBUS_MASTER_USED
+#include "ModbusMasterAPP.h"
+#endif
+
 #include <stdint.h>
 
 /*******************************************************************************
@@ -92,7 +96,7 @@
 
 
 #ifdef MODBUS_MASTER_USED
-//yangliang add
+
 typedef struct
 {
   uint8_t MasterStatus;				// 1,表示开始
@@ -107,6 +111,7 @@ typedef struct
   uint8_t *MBUF;
 }
 MODBUS_PROCESStyp;
+
 #endif
 
 
@@ -162,7 +167,7 @@ Modbus_Port;
 //uint8_t * Get_MemoryAddr(uint8_t select, uint8_t port);
 
 #ifdef MODBUS_SLAVE_USED
-void Slave0_InitPort(uint8_t port);
+void ModbusSlaveInitPort(uint8_t port);
 void ModbusSlaveMainProcess(uint8_t port);
 uint8_t ModbusSlaveReceiveInt(uint8_t *pbyData, uint16_t uCount,uint8_t port);
 void ModbusSlavePollSend(uint8_t port);
