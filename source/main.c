@@ -108,7 +108,7 @@ int main(void)
 #endif
   
 #ifdef MODBUS_MASTER_USED
-  MB_Init();
+  MB_Init(MASTER_PORT0);
   Master0_InitPort(MASTER_PORT0);
 #endif
   
@@ -121,7 +121,7 @@ int main(void)
 #endif
     
 #ifdef MODBUS_MASTER_USED
-    ModbusNet1MasterAPP();
+    ModbusNet1MasterAPP(MASTER_PORT0);
     ModbusMasterSendMessage(MASTER_PORT0);
     ModbusMasterMainReceive(MASTER_PORT0);
 #endif

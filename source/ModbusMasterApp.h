@@ -83,7 +83,11 @@
 
 #define DEVICE2_READ_OFFSET				6
 
-#define NET1_DELAY_MS					1000
+#define NET1_TIMOUT_MS					500
+#define NET2_TIMOUT_MS					500
+
+#define NET1_TIMEOUT_LIMIT	MSEC_TO_COUNT(NET1_TIMOUT_MS,TIMER_SOURCE_CLOCK)
+#define NET2_TIMEOUT_LIMIT	MSEC_TO_COUNT(NET2_TIMOUT_MS,TIMER_SOURCE_CLOCK)
 
 
 typedef struct
@@ -115,8 +119,8 @@ MODBUS_SLAVELISTtyp;
 ******************************************************************************/
 
 
-void MB_Init(void);
-void ModbusNet1MasterAPP(void);
+void MB_Init(uint16_t port);
+void ModbusNet1MasterAPP(uint16_t port);
 static uint8_t ModbusNet1Checking(uint8_t status);
 
 

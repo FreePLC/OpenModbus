@@ -1240,7 +1240,7 @@ void ModbusMasterSendMessage(uint8_t port)
   {
     if((g_ModbusMasterPort[port].SendStartTime - g_ModbusMasterPort[port].Timer0_Value_Get()) > g_ModbusMasterPort[port].TimeOutLimit)
     {
-      //g_MProcess[port].Error = MODBUS_ERROR_TIMEOUT_LIMIT;
+      g_MProcess[port].Error = MODBUS_ERROR_TIMEOUT_LIMIT;
       g_MProcess[port].MasterStatus = MODBUS_MASTER_STATUS_END;
     }
   }
